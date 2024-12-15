@@ -1,0 +1,141 @@
+{
+    "$schema": "https://vega.github.io/schema/vega-lite/v5.json",
+    "params": [
+      {
+        "name": "selectedCountry",
+        "value": "All",
+        "bind": {
+          "input": "select",
+          "options": [
+            "All", "United Kingdom", "France", "Brazil", "Bulgaria", "Turkey", "Switzerland", 
+            "Norway", "Belgium", "Canada", "Sweden", "Austria", "Russia", "United States",
+            "Italy", "Australia", "Finland", "Spain", "Romania", "Portugal", "Iceland", 
+            "Poland", "South Africa", "Greece", "China", "Japan", "Argentina", "Costa Rica", 
+            "New Zealand", "Hong Kong, China", "Indonesia", "Israel", "Mexico", "Thailand",
+            "Germany", "Denmark", "Malaysia", "Taiwan", "Oman", "India", "Jordan", "Ukraine",
+            "Chile", "Colombia", "Slovenia", "Hungary", "Ecuador", "Estonia", "Philippines", 
+            "Nepal", "Croatia", "Ireland", "Czech Republic", "Fiji", "Andorra", "Chad", "Singapore"
+          ],
+          "name": "Select Country: "
+        }
+      }
+    ],
+    "vconcat": [
+      {
+        "title": "Global Ultra-Trail Running Events and Participant Demographics",
+        "width": 1200,
+        "height": 500,
+        "layer": [
+          {
+            "data": {
+              "url": "https://vega.github.io/vega-lite/data/world-110m.json",
+              "format": {"type": "topojson", "feature": "countries"}
+            },
+            "mark": {"type": "geoshape", "fill": "lightgray", "stroke": "white"},
+            "projection": {"type": "naturalEarth1"}
+          },
+          {
+            "data": {
+              "url": "https://raw.githubusercontent.com/Sanixia/project/refs/heads/main/combined_data_6.csv",
+              "format": {"type": "csv"}
+            },
+            "transform": [
+              {
+                "filter": "selectedCountry === 'All' || lower(datum.country) === lower(selectedCountry)"
+              }
+            ],
+            "mark": "circle",
+            "encoding": {
+              "longitude": {"field": "longitude", "type": "quantitative"},
+              "latitude": {"field": "latitude", "type": "quantitative"},
+              "size": {
+                "field": "participants",
+                "type": "quantitative",
+                "title": "Total Participants",
+                "scale": {"range": [1, 3000]}
+              },
+              "color": {
+                "field": "elevation_gain",
+                "type": "quantitative",
+                "scale": {"scheme": "greens"},
+                "title": "Elevation Gain"
+              },
+              "tooltip": [
+                {"field": "event", "type": "nominal", "title": "Event Name"},
+                {"field": "participants", "type": "quantitative", "title": "Participants"},
+                {"field": "distance", "type": "quantitative", "title": "Distance (km)"},
+                {"field": "elevation_gain", "type": "quantitative", "title": "Elevation Gain"}
+              ]
+            },
+            "selection": {
+              "selectEvent": {"type": "single", "on": "click", "fields": ["event"]}
+            }
+          }
+        ]
+      },
+      {
+        "title": {
+          "text": {
+            "signal": "selectEvent.event ? 'Runner Demographics for ' + selectEvent.event[0] : 'Runner Demographics for Selected Event'"
+          },
+          "fontSize": 18,
+          "anchor": "middle",
+          "color": "black"
+        },
+        "width": "container",
+        "height": 450,
+        "data": {
+          "url": "https://raw.githubusercontent.com/Sanixia/project/refs/heads/main/combined_data_6.csv",
+          "format": {"type": "csv"}
+        },
+        "transform": [
+          {
+            "filter": "(!selectEvent.event || datum.event === selectEvent.event[0]) && (selectedCountry === 'All' || datum.country === selectedCountry)"
+          }
+        ],
+        "hconcat": [
+          {
+            "width": 600,
+            "height": 500,
+            "mark": "bar",
+            "encoding": {
+              "x": {
+                "field": "age",
+                "type": "quantitative",
+                "bin": {"maxbins": 8},
+                "title": "Age"
+              },
+              "y": {
+                "aggregate": "count",
+                "type": "quantitative",
+                "title": "Runner Count"
+              },
+              "color": {"field": "gender", "type": "nominal", "title": "Gender"},
+              "opacity": {
+                "condition": [
+                  {"test": "datum.gender === 'M'", "value": 0.7},
+                  {"test": "datum.gender === 'W'", "value": 0.7},
+                  {"test": "datum.gender === 'Other'", "value": 0.5}
+                ],
+                "value": 0.7
+              }
+            }
+          },
+          {
+            "width": 600,
+            "height": 500,
+            "mark": "boxplot",
+            "encoding": {
+              "x": {"field": "gender", "type": "nominal", "title": "Gender", "axis": {"labelAngle": 0}},
+              "y": {
+                "field": "time_in_hours",
+                "type": "quantitative",
+                "title": "Finishing Time (Hours)"
+              },
+              "color": {"field": "gender", "type": "nominal", "title": "Gender"}
+            }
+          }
+        ]
+      }
+    ]
+}
